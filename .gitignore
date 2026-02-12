@@ -1,0 +1,53 @@
+# Secrets and Configuration
+config.json
+*.secret
+*.key
+*.pem
+*.pfx
+
+# Bitwarden
+.bw/
+bw.exe
+
+# Logs
+*.log
+automation.log
+audit-*.log
+
+# Backups
+backups/
+*.xml
+
+# Reports
+*.csv
+health-check-*.json
+weekly-*.csv
+monthly-*.csv
+live-stats.json
+
+# PowerShell
+*.ps1xml
+PSReadLineHistory.txt
+
+# Temp files
+temp-*.json
+temp-*.csv
+*.tmp
+
+# OS Files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.code-workspace
+
+# Environment
+.env
+.env.local
+
+# Test data
+test-data/
+sample-users.csv
