@@ -1,0 +1,8 @@
+============================================================
+  Platform & Service Tracker — Audit Log
+  Started: 2026-02-13 09:20:10
+  Host:    unknown
+  User:    valentina.fermin
+============================================================
+[2026-02-13 09:20:10] [WARN] Entra ID credentials not configured — skipping.
+[2026-02-13 09:20:10] [WARN] Try: .\Start-EntraSync.ps1 -Interactive

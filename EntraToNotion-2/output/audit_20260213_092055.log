@@ -1,0 +1,36 @@
+============================================================
+  Platform & Service Tracker — Audit Log
+  Started: 2026-02-13 09:20:55
+  Host:    unknown
+  User:    valentina.fermin
+============================================================
+[2026-02-13 09:20:55] [INFO] Using interactive (delegated) authentication...
+[2026-02-13 09:20:55] [SUCCESS] Connected via interactive auth
+[2026-02-13 09:20:55] [INFO] Granted scopes: Application.Read.All, AuditLog.Read.All, Directory.Read.All, Directory.ReadWrite.All, openid, Organization.Read.All, Policy.Read.All, profile, Reports.Read.All, RoleManagement.Read.Directory, User.Read.All, User.ReadWrite.All, email
+[2026-02-13 09:20:55] [INFO] ═══ Entra ID — License SKUs ═══
+[2026-02-13 09:20:55] [INFO] Downloading Microsoft SKU name mapping...
+[2026-02-13 09:20:56] [SUCCESS] Loaded 609 SKU name mappings
+[2026-02-13 09:20:57] [INFO] Found 10 subscribed SKUs
+[2026-02-13 09:20:57] [WARN] Could not fetch subscription dates: 
+{
+  "error": {
+    "code": "InvalidAuthenticationToken",
+    "message": "ArgumentNull",
+    "innerError": {
+      "date": "2026-02-13T08:20:57",
+      "request-id": "ccf85344-b785-430c-9b53-42b4ba30bf63",
+      "client-request-id": "ccf85344-b785-430c-9b53-42b4ba30bf63"
+    }
+  }
+}
+[2026-02-13 09:20:57] [SUCCESS] Processed 10 license records
+[2026-02-13 09:20:57] [INFO] ═══ Entra ID — Enterprise Applications ═══
+[2026-02-13 09:20:59] [INFO] Found 216 integrated enterprise apps
+[2026-02-13 09:20:59] [INFO] 206 are 3rd-party SaaS apps
+[2026-02-13 09:20:59] [SUCCESS] Processed 206 enterprise app records
+[2026-02-13 09:20:59] [INFO] ═══ Summary ═══
+[2026-02-13 09:20:59] [INFO] Total records: 216
+[2026-02-13 09:20:59] [INFO]   Licenses:        10
+[2026-02-13 09:20:59] [INFO]   Enterprise Apps: 206
+[2026-02-13 09:20:59] [WARN] Notion not configured — set NOTION_TOKEN and NOTION_DATABASE_ID
+[2026-02-13 09:20:59] [SUCCESS] Done! 216 services processed.
