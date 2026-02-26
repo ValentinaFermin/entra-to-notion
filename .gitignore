@@ -1,0 +1,8 @@
+.env
+config/.env
+output/
+*.csv
+*.json
+*.log
+.DS_Store
+!.vscode/
