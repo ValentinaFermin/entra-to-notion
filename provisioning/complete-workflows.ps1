@@ -58,13 +58,13 @@ Write-Host "`n"
 
 try {
     # 1. Generate Secure Password
-    Write-Host "[1/8] Generating secure password..." -ForegroundColor Yellow
+    Write-Host "[1/9] Generating secure password..." -ForegroundColor Yellow
     Add-Type -AssemblyName System.Web
     $TempPassword = [System.Web.Security.Membership]::GeneratePassword(16, 4)
     Write-Host "✓ Password generated" -ForegroundColor Green
 
     # 2. Create Entra ID User
-    Write-Host "[2/8] Creating Entra ID user..." -ForegroundColor Yellow
+    Write-Host "[2/9] Creating Entra ID user..." -ForegroundColor Yellow
     Connect-MgGraph -Scopes "User.ReadWrite.All", "Group.ReadWrite.All"
     
     $PasswordProfile = @{
@@ -90,16 +90,16 @@ try {
 
     # 3. Set Manager
     if ($Manager) {
-        Write-Host "[3/8] Setting manager..." -ForegroundColor Yellow
+        Write-Host "[3/9] Setting manager..." -ForegroundColor Yellow
         $ManagerId = (Get-MgUser -Filter "UserPrincipalName eq '$Manager'").Id
         Set-MgUserManagerByRef -UserId $NewUser.Id -OdataId "https://graph.microsoft.com/v1.0/users/$ManagerId"
         Write-Host "✓ Manager set: $Manager" -ForegroundColor Green
     } else {
-        Write-Host "[3/8] No manager specified, skipping..." -ForegroundColor Gray
+        Write-Host "[3/9] No manager specified, skipping..." -ForegroundColor Gray
     }
 
     # 4. Add to Groups
-    Write-Host "[4/8] Adding to groups..." -ForegroundColor Yellow
+    Write-Host "[4/9] Adding to groups..." -ForegroundColor Yellow
     foreach ($GroupName in $DefaultGroups) {
         $Group = Get-MgGroup -Filter "DisplayName eq '$GroupName'"
         if ($Group) {
@@ -109,14 +109,14 @@ try {
     }
 
     # 5. Assign License
-    Write-Host "[5/8] Assigning license..." -ForegroundColor Yellow
+    Write-Host "[5/9] Assigning license..." -ForegroundColor Yellow
     Start-Sleep -Seconds 10  # Wait for replication
     $SkuId = (Get-MgSubscribedSku -All | Where-Object {$_.SkuPartNumber -eq $LicenseSku}).SkuId
     Set-MgUserLicense -UserId $NewUser.Id -AddLicenses @{SkuId = $SkuId} -RemoveLicenses @()
     Write-Host "✓ License assigned: $LicenseSku" -ForegroundColor Green
 
     # 6. Wait for Mailbox Creation
-    Write-Host "[6/8] Waiting for mailbox creation..." -ForegroundColor Yellow
+    Write-Host "[6/9] Waiting for mailbox creation..." -ForegroundColor Yellow
     Connect-ExchangeOnline -ShowBanner:$false
     
     $MaxAttempts = 10
@@ -143,15 +143,25 @@ try {
 
     # 7. Configure Mailbox Settings
     if ($MailboxCreated) {
-        Write-Host "[7/8] Configuring mailbox..." -ForegroundColor Yellow
+        Write-Host "[7/9] Configuring mailbox..." -ForegroundColor Yellow
         Set-Mailbox -Identity $UserEmail -RetentionPolicy "Default MRM Policy"
         Write-Host "✓ Mailbox configured" -ForegroundColor Green
+
+        # 8. Set default calendar permissions to LimitedDetails
+        Write-Host "[8/9] Setting calendar default permissions..." -ForegroundColor Yellow
+        try {
+            Set-MailboxFolderPermission -Identity "${UserEmail}:\Calendar" -User Default -AccessRights LimitedDetails -ErrorAction Stop
+            Write-Host "✓ Calendar default permission set to LimitedDetails" -ForegroundColor Green
+        } catch {
+            Write-Host "⚠ Could not set calendar permissions — set manually later" -ForegroundColor Yellow
+        }
     } else {
-        Write-Host "[7/8] Skipping mailbox configuration" -ForegroundColor Gray
+        Write-Host "[7/9] Skipping mailbox configuration" -ForegroundColor Gray
+        Write-Host "[8/9] Skipping calendar permissions (no mailbox)" -ForegroundColor Gray
     }
 
-    # 8. Store Password in Bitwarden
-    Write-Host "[8/8] Storing password in Bitwarden..." -ForegroundColor Yellow
+    # 9. Store Password in Bitwarden
+    Write-Host "[9/9] Storing password in Bitwarden..." -ForegroundColor Yellow
     $env:BW_SESSION = bw unlock --raw
     
     $ItemJson = @{
