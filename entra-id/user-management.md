@@ -171,6 +171,146 @@ Update-MgUser -UserId "jdoe@company.com" -PasswordProfile @{
 }
 ```
 
+### Auto-Generate Password, Reset & Force Change on Next Login
+```powershell
+# Cross-platform password generator (works on macOS/Linux/Windows)
+$Upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+$Lower = 'abcdefghijklmnopqrstuvwxyz'
+$Digits = '0123456789'
+$Special = '!@#$%&*?'
+$All = $Upper + $Lower + $Digits + $Special
+
+$PasswordChars = @(
+    $Upper[(Get-Random -Maximum $Upper.Length)]
+    $Lower[(Get-Random -Maximum $Lower.Length)]
+    $Digits[(Get-Random -Maximum $Digits.Length)]
+    $Special[(Get-Random -Maximum $Special.Length)]
+)
+for ($i = $PasswordChars.Count; $i -lt 16; $i++) {
+    $PasswordChars += $All[(Get-Random -Maximum $All.Length)]
+}
+$AutoPassword = -join ($PasswordChars | Get-Random -Count $PasswordChars.Count)
+
+Update-MgUser -UserId "jdoe@company.com" -PasswordProfile @{
+    Password = $AutoPassword
+    ForceChangePasswordNextSignIn = $true
+}
+
+Write-Host "Password reset for jdoe@company.com" -ForegroundColor Green
+Write-Host "Temporary password: $AutoPassword"
+```
+
+## License Management
+
+### List Available Licenses (Subscribed SKUs)
+```powershell
+Get-MgSubscribedSku -All | Select-Object SkuPartNumber, SkuId, ConsumedUnits,
+    @{Name="TotalUnits"; Expression={$_.PrepaidUnits.Enabled}}
+```
+
+### Assign Microsoft 365 E5 License
+```powershell
+$UserId = (Get-MgUser -Filter "UserPrincipalName eq 'jdoe@company.com'").Id
+$E5SkuId = (Get-MgSubscribedSku -All | Where-Object { $_.SkuPartNumber -eq "SPE_E5" }).SkuId
+
+Set-MgUserLicense -UserId $UserId -AddLicenses @(@{ SkuId = $E5SkuId }) -RemoveLicenses @()
+Write-Host "E5 license assigned to jdoe@company.com" -ForegroundColor Green
+```
+
+### Assign E5 License with Specific Service Plans Disabled
+```powershell
+$UserId = (Get-MgUser -Filter "UserPrincipalName eq 'jdoe@company.com'").Id
+$E5Sku = Get-MgSubscribedSku -All | Where-Object { $_.SkuPartNumber -eq "SPE_E5" }
+
+# Disable specific plans (e.g., Yammer, Sway)
+$DisabledPlans = $E5Sku.ServicePlans |
+    Where-Object { $_.ServicePlanName -in @("YAMMER_ENTERPRISE", "SWAY") } |
+    Select-Object -ExpandProperty ServicePlanId
+
+Set-MgUserLicense -UserId $UserId -AddLicenses @(@{
+    SkuId = $E5Sku.SkuId
+    DisabledPlans = $DisabledPlans
+}) -RemoveLicenses @()
+```
+
+### Get User's Assigned Licenses
+```powershell
+Get-MgUserLicenseDetail -UserId "jdoe@company.com" |
+    Select-Object SkuPartNumber, SkuId
+```
+
+### Remove License
+```powershell
+$UserId = (Get-MgUser -Filter "UserPrincipalName eq 'jdoe@company.com'").Id
+$E5SkuId = (Get-MgSubscribedSku -All | Where-Object { $_.SkuPartNumber -eq "SPE_E5" }).SkuId
+
+Set-MgUserLicense -UserId $UserId -AddLicenses @() -RemoveLicenses @($E5SkuId)
+```
+
+## Combined: Assign E5 License + Set Location + Reset Password + Force Change
+
+See `provisioning/assign-e5-reset-password.ps1` for the full script. It handles:
+1. Setting usage location to Spain (ES)
+2. Assigning Microsoft 365 E5 license (with availability checks)
+3. Assigning Power Automate Free license
+4. Generating a cross-platform secure password
+5. Resetting password and forcing change on next login
+
+### Required Scopes & Roles
+```powershell
+# Requires Privileged Authentication Administrator or Global Administrator role
+Connect-MgGraph -Scopes "User.ReadWrite.All", "Directory.ReadWrite.All", "Organization.Read.All", "UserAuthenticationMethod.ReadWrite.All"
+```
+
+### Usage
+```powershell
+./provisioning/assign-e5-reset-password.ps1 -UserPrincipalName "jdoe@company.com"
+```
+
+## Admin Role Management
+
+### Check Current User's Admin Roles
+```powershell
+$me = Get-MgContext
+$userId = (Get-MgUser -UserId $me.Account).Id
+Get-MgUserMemberOf -UserId $userId | ForEach-Object { Get-MgDirectoryRole -DirectoryRoleId $_.Id -ErrorAction SilentlyContinue } | Select-Object DisplayName
+```
+
+## SharePoint & Teams Integration
+
+### Get SharePoint Site for a Specific Team
+```powershell
+Connect-MgGraph -Scopes "Group.Read.All", "Sites.Read.All"
+
+$GroupId = (Get-MgGroup -Filter "displayName eq 'Your Team Name'" -Property Id,ResourceProvisioningOptions |
+    Where-Object { $_.ResourceProvisioningOptions -contains "Team" }).Id
+Get-MgGroupSite -GroupId $GroupId -SiteId "root" | Select-Object DisplayName, WebUrl
+```
+
+### List All Teams with Their SharePoint Sites
+```powershell
+Get-MgGroup -Filter "resourceProvisioningOptions/any(x:x eq 'Team')" -All | ForEach-Object {
+    $Site = Get-MgGroupSite -GroupId $_.Id -SiteId "root" -ErrorAction SilentlyContinue
+    [PSCustomObject]@{
+        TeamName      = $_.DisplayName
+        GroupId       = $_.Id
+        SharePointUrl = $Site.WebUrl
+    }
+} | Format-Table -AutoSize
+```
+
+### Get Team Document Library (Files Tab) URL
+```powershell
+$GroupId = (Get-MgGroup -Filter "displayName eq 'Your Team Name'").Id
+$Drive = Get-MgGroupDrive -GroupId $GroupId | Select-Object -First 1
+Write-Host "Files URL: $($Drive.WebUrl)"
+```
+
+### Search for a Team by Name
+```powershell
+Get-MgGroup -Search '"displayName:team_name"' -ConsistencyLevel eventual -Property Id,DisplayName,ResourceProvisioningOptions | Select-Object DisplayName, Id
+```
+
 ## Reporting
 
 ### Users Created Last 30 Days
