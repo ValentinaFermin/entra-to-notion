@@ -50,6 +50,29 @@ Add-RecipientPermission -Identity "shared@company.com" -Trustee "user@company.co
 Set-Mailbox -Identity "user@company.com" -Type Shared
 ```
 
+### Transport Rules
+```powershell
+# List all transport rules
+Get-TransportRule | Format-List Name, State, Priority, Description
+
+# Only enabled rules
+Get-TransportRule | Where-Object {$_.State -eq "Enabled"}
+```
+
+### Email Forwarding
+```powershell
+# List all mailboxes with forwarding enabled
+Get-Mailbox -ResultSize Unlimited |
+    Where-Object {$_.ForwardingAddress -ne $null} |
+    Select-Object DisplayName, PrimarySmtpAddress, ForwardingAddress, DeliverToMailboxAndForward
+
+# Set forwarding
+Set-Mailbox -Identity "user@company.com" -ForwardingAddress "manager@company.com" -DeliverToMailboxAndForward $true
+
+# Remove forwarding
+Set-Mailbox -Identity "user@company.com" -ForwardingAddress $null -DeliverToMailboxAndForward $false
+```
+
 ## Licensing
 
 ### License Assignment
@@ -103,7 +126,26 @@ curl -H "Authorization: Bearer $TOKEN" "$JAMF_URL/JSSResource/computers/id/123" 
 curl -H "Authorization: Bearer $TOKEN" "$JAMF_URL/JSSResource/computercommands/command/UpdateInventory/id/123" -X POST
 ```
 
+### SharePoint & Teams
+```powershell
+# Get SharePoint site for a team
+$GroupId = (Get-MgGroup -Filter "displayName eq 'Team Name'" -Property Id,ResourceProvisioningOptions |
+    Where-Object { $_.ResourceProvisioningOptions -contains "Team" }).Id
+Get-MgGroupSite -GroupId $GroupId -SiteId "root" | Select-Object DisplayName, WebUrl
+
+# List all teams with SharePoint URLs
+Get-MgGroup -Filter "resourceProvisioningOptions/any(x:x eq 'Team')" -All | ForEach-Object {
+    $Site = Get-MgGroupSite -GroupId $_.Id -SiteId "root" -ErrorAction SilentlyContinue
+    [PSCustomObject]@{ TeamName = $_.DisplayName; SharePointUrl = $Site.WebUrl }
+} | Format-Table -AutoSize
+```
+
 ## Complete Workflows
+
+### Assign E5 License + Reset Password
+```powershell
+.\provisioning\assign-e5-reset-password.ps1 -UserPrincipalName "user@company.com"
+```
 
 ### New User Provisioning
 ```powershell
@@ -229,11 +271,16 @@ Connect-ExchangeOnline
 
 ### Permission Issues
 ```powershell
-# Check current permissions
-Get-MgContext | Select-Object -ExpandProperty Scopes
+# Check current permissions/scopes
+(Get-MgContext).Scopes
 
-# Required scopes:
-# User.ReadWrite.All, Group.ReadWrite.All, Directory.ReadWrite.All
+# Check your admin roles
+$me = Get-MgContext
+$userId = (Get-MgUser -UserId $me.Account).Id
+Get-MgUserMemberOf -UserId $userId | ForEach-Object { Get-MgDirectoryRole -DirectoryRoleId $_.Id -ErrorAction SilentlyContinue } | Select-Object DisplayName
+
+# Required scopes for license + password operations:
+# User.ReadWrite.All, Directory.ReadWrite.All, Organization.Read.All, UserAuthenticationMethod.ReadWrite.All
 ```
 
 ### Rate Limiting
