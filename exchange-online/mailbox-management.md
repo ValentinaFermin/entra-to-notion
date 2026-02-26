@@ -148,6 +148,20 @@ Get-MessageTrace -RecipientAddress "recipient@external.com" -StartDate (Get-Date
 Start-HistoricalSearch -ReportTitle "Monthly Report" -StartDate (Get-Date).AddDays(-30) -EndDate (Get-Date) -ReportType MessageTrace -SenderAddress "jdoe@company.com"
 ```
 
+### List All Transport Rules
+```powershell
+Get-TransportRule
+
+# With details
+Get-TransportRule | Format-List Name, State, Priority, Description
+
+# Only enabled rules
+Get-TransportRule | Where-Object {$_.State -eq "Enabled"}
+
+# Export to CSV
+Get-TransportRule | Export-Csv "transport-rules.csv" -NoTypeInformation
+```
+
 ### Create Transport Rule
 ```powershell
 New-TransportRule -Name "Block External Forwarding" `
@@ -155,6 +169,40 @@ New-TransportRule -Name "Block External Forwarding" `
     -SentToScope NotInOrganization `
     -MessageTypeMatches AutoForward `
     -RejectMessageReasonText "External forwarding is not allowed"
+```
+
+## Email Forwarding
+
+### List All Mailboxes with Forwarding Enabled
+```powershell
+Get-Mailbox -ResultSize Unlimited |
+    Where-Object {$_.ForwardingAddress -ne $null} |
+    Select-Object DisplayName, PrimarySmtpAddress, ForwardingAddress, DeliverToMailboxAndForward
+```
+
+### Export Forwarding Report to CSV
+```powershell
+Get-Mailbox -ResultSize Unlimited |
+    Where-Object {$_.ForwardingAddress -ne $null} |
+    Select-Object DisplayName, PrimarySmtpAddress, ForwardingAddress, DeliverToMailboxAndForward |
+    Export-Csv "mailboxes-with-forwarding.csv" -NoTypeInformation
+```
+
+### List Only User Mailboxes with Forwarding
+```powershell
+Get-Mailbox -ResultSize Unlimited -RecipientTypeDetails UserMailbox |
+    Where-Object {$_.ForwardingAddress -ne $null} |
+    Select-Object DisplayName, PrimarySmtpAddress, ForwardingAddress, DeliverToMailboxAndForward
+```
+
+### Set Email Forwarding on a Mailbox
+```powershell
+Set-Mailbox -Identity "jdoe@company.com" -ForwardingAddress "manager@company.com" -DeliverToMailboxAndForward $true
+```
+
+### Remove Email Forwarding
+```powershell
+Set-Mailbox -Identity "jdoe@company.com" -ForwardingAddress $null -DeliverToMailboxAndForward $false
 ```
 
 ## Calendar Processing
