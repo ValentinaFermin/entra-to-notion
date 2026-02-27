@@ -238,6 +238,12 @@ function Sync-AllToNotion {
     foreach ($svc in $Services) {
         $current++
         $pct = [math]::Round(($current / $total) * 100)
+
+        if (-not $svc.ServiceName) {
+            Write-Log "  ⚠ Skipping record with no ServiceName (SkuPartNumber: $($svc.SkuPartNumber))" -Level WARN
+            continue
+        }
+
         Write-Progress -Activity "Syncing to Notion" `
             -Status "$current/$total — $($svc.ServiceName)" `
             -PercentComplete $pct
