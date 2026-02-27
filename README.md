@@ -16,7 +16,8 @@ EntraToNotion/
 │       ├── Config.psm1              # .env loader
 │       ├── Logger.psm1              # Console + file logging
 │       └── SkuMapping.psm1          # SKU → friendly name mapping
-├── config/.env.example
+├── config/.env.example              # Template — copy to .env and fill in
+├── config/.env                      # Your credentials (gitignored)
 ├── tests/
 │   ├── Test-EntraConnection.ps1
 │   └── Test-NotionConnection.ps1
@@ -28,7 +29,6 @@ EntraToNotion/
 
 ```powershell
 .\Install-Dependencies.ps1
-Copy-Item config/.env.example config/.env   # Fill in credentials
 
 # Option A: Interactive auth (recommended to start)
 .\Start-EntraSync.ps1 -Interactive
@@ -45,10 +45,10 @@ Copy-Item config/.env.example config/.env   # Fill in credentials
 ```
 
 **App-only (client credentials)** — for scheduled runs:
-1. Create Entra App Registration with permissions:
+1. Create Entra App Registration with the following permissions (Application type):
    - `Application.Read.All`, `Organization.Read.All`, `Directory.Read.All`, `AuditLog.Read.All`
-2. Grant admin consent
-3. Fill in `config/.env`
+2. Grant admin consent in the Azure portal
+3. Fill in `config/.env` (use `config/.env.example` as reference)
 4. Run `.\Start-EntraSync.ps1`
 
 ## Notion Setup
