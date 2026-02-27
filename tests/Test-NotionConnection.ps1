@@ -20,7 +20,7 @@ Import-Module (Join-Path $modulesRoot "Notion" "NotionSync.psm1") -Force
 Write-Banner
 Write-Log "Testing Notion API connection..."
 
-$Config = Get-PlatformTrackerConfig
+$Config = Get-TrackerConfig
 
 # --- Test 1: Connection ---
 Write-Log "Test 1: API Connection"

@@ -21,7 +21,7 @@ Import-Module (Join-Path $modulesRoot "Collectors" "EntraCollector.psm1") -Force
 Write-Banner
 Write-Log "Testing Entra ID / Graph API connection..."
 
-$Config = Get-PlatformTrackerConfig
+$Config = Get-TrackerConfig
 
 # --- Test 1: Authentication ---
 Write-Log "Test 1: Authentication"
