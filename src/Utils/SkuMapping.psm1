@@ -51,6 +51,8 @@ function Resolve-SkuFriendlyName {
         [hashtable]$NameMap = @{}
     )
 
+    if (-not $SkuPartNumber) { return $null }
+
     if ($NameMap.ContainsKey($SkuPartNumber)) {
         return $NameMap[$SkuPartNumber]
     }

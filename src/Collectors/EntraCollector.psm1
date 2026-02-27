@@ -131,6 +131,9 @@ function Get-EntraLicenses {
         $available = $total - $consumed
 
         $friendlyName = Resolve-SkuFriendlyName -SkuPartNumber $sku.SkuPartNumber -NameMap $nameMap
+        if (-not $friendlyName) {
+            $friendlyName = if ($sku.SkuPartNumber) { $sku.SkuPartNumber -replace '_', ' ' } else { "Unknown SKU ($($sku.SkuId))" }
+        }
 
         $status = switch ($sku.CapabilityStatus) {
             "Enabled"   { "Active" }
